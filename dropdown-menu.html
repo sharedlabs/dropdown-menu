@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-media-query/iron-media-query.html">
+<link rel="import" href="../paper-ripple/paper-ripple.html">
 <link rel="import" href="../overlay-container/overlay-behavior.html">
 
 <!--
@@ -140,6 +141,7 @@
 
       this._animation.onfinish = _ => {
         this.fire('overlay-open-animation-finish');
+        this.async(_ => this._ensureRipples());
         this._animation = null;
       };
     },
@@ -197,9 +199,6 @@
         transformOrigin += ' left';
       }
 
-      console.log({top, bottom, right, left, transformOrigin});
-      
-
       Object.assign(this.$.content.style,
         {top, bottom, right, left, transformOrigin});
     },
@@ -216,6 +215,23 @@
         };
       }
       return target.getBoundingClientRect();
+    },
+
+    /**
+     * Lazy render the <paper-ripple> element into every button. 
+     */
+    _ensureRipples() {
+      Polymer.dom(this).children.forEach(el => {
+        if ((el.tagName === 'BUTTON' || el.tagName === 'A') && !el._hasRipple) {
+          const ripple = this.create('paper-ripple', {
+            opacityDecayVelocity: 0.8,
+            recenters: true
+          });
+
+          Polymer.dom(el).appendChild(ripple);
+          el._hasRipple = true;
+        }
+      });
     }
 
   });
