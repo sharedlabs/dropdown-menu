@@ -1,0 +1,70 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="dropdown-menu.html">
+
+<dom-module id="dropdown-menu-container">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+      }
+    </style>
+
+    <div id="dropdownTrigger" on-tap="_dropdownTriggerTapped">
+      <content></content>
+    </div>
+
+    <dropdown-menu
+        id="dropdown"
+        opened="{{opened}}"
+        no-cancel-on-outside-click="{{noCancelOnOutsideClick}}"></dropdown-menu>
+
+  </template>
+</dom-module>
+
+<script>
+(function() {
+  'use strict'
+
+  Polymer({
+
+    is: 'dropdown-menu-container',
+
+    properties: {
+
+      noCancelOnOutsideClick: {
+        type: Boolean,
+        value: false
+      },
+
+      opened: Boolean,
+
+      _instance: Object
+
+    },
+
+    toggle() {
+      if (!this._instance) {
+        const template = Polymer.dom(this).querySelector('template[is="dom-template"]');
+
+        if (!template) {
+          throw new Error('dropdown-menu requeres a <template> child');
+        }
+
+        this._instance = template.stamp();
+        this.$.dropdown.positionTarget = this.$.dropdownTrigger;
+        Polymer.dom(this.$.dropdown).appendChild(this._instance.root);
+      }
+
+      this.opened = !this.opened;
+    },
+
+    _dropdownTriggerTapped(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggle();
+    }
+
+  });
+
+}());
+</script>

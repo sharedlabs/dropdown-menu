@@ -1,139 +1,68 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../iron-overlay-behavior/iron-overlay-behavior.html">
-<link rel="import" href="../paper-ripple/paper-ripple.html">
+<link rel="import" href="../iron-media-query/iron-media-query.html">
+<link rel="import" href="../overlay-container/overlay-behavior.html">
 
-<dom-module id="dropdown-menu-overlay">
+<!--
+  By default this element center the dropdown in the middle of the screen.
+-->
+<dom-module id="dropdown-menu">
   <template>
     <style>
       :host {
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      /* content box */
+      #content {
         background: white;
         border-radius: 2px;
         box-shadow: 0 1px 20px 2px rgba(0, 0, 0, 0.2);
-        transform-origin: top right;
+        min-width: 180px;
+        position: absolute;
       }
 
-      ::content button {
+      :host([small-screen]) #content {
+        width: 80%;
+        min-width: auto;
+      }
+
+      #content ::content button,
+      #content ::content a {
         background: none;
         border: 0;
         color: initial;
+        cursor: pointer;
         display: block;
         font-size: 16px;
         outline: 0;
+        overflow: hidden;
         padding: 14px 20px 14px;
         position: relative;
         text-align: left;
         text-decoration: none;
         width: 100%;
-        min-width: 180px;
-        cursor: pointer;
       }
     </style>
 
-    <content></content>
-
-  </template>
-</dom-module>
-
-<script>
-(function() {
-  'use strict';
-
-  Polymer({
-
-    is: 'dropdown-menu-overlay',
-
-    behaviors: [
-      Polymer.IronOverlayBehavior
-    ],
-
-    attached() {
-      this.backdropElement.style.opacity = 0;
-    },
-
-    _openedChanged() {
-      if (this.animation) {
-        this.animation.finish();
-      }
-
-      Polymer.IronOverlayBehaviorImpl._openedChanged.apply(this, arguments);
-    },
-
-    _updateRipples() {
-      Polymer.dom(this).children.forEach(el => {
-        if ((el.tagName === 'BUTTON' || el.tagName === 'A') && !el._hasRipple) {
-          const ripple = this.create('paper-ripple', {
-            opacityDecayVelocity: 0.8,
-            recenters: true
-          });
-
-          ripple.style.color = '#bbb';
-          Polymer.dom(el).appendChild(ripple);
-          el._hasRipple = true;
-        }
-      });
-    },
-
-    _renderOpened() {
-      this.style.pointerEvents = 'none';
-
-      this.animation = this.animate([
-        {transform: 'scale(0.3, 0) translate(20px, -10px)'},
-        {transform: 'scale(1, 1) translate(0, 0)'}
-      ], {
-        duration: 240,
-        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-      });
-
-      this.animation.onfinish = () => {
-        this.style.pointerEvents = '';
-        this._finishRenderOpened();
-
-        this.async(_ => {
-          this._updateRipples();
-        });
-
-        this.animation = null;
-      };
-    },
-
-    _renderClosed() {
-      this.animation = this.animate([
-        {opacity: 1},
-        {opacity: 0}
-      ], {
-        duration: 500,
-        easing: 'cubic-bezier(0.19, 1, 0.22, 1)'
-      });
-
-      this.animation.onfinish = () => {
-        this._finishRenderClosed();
-        this.animation = null;
-      };
-    }
-
-  });
-
-}());
-</script>
-
-<dom-module id="dropdown-menu">
-  <template>
-    <style>
-      :host {
-        display: inline-block;
-      }
-    </style>
-  
-    <div id="dropdownTrigger" on-tap="_triggerTapped">
+    <div id="content">
       <content></content>
     </div>
 
+    <iron-media-query query="(max-width: 640px)" query-matches="{{smallScreen}}"></iron-media-query>
+
   </template>
 </dom-module>
 
 <script>
 (function() {
-  'use strict';
+  'use strict'
 
   Polymer({
 
@@ -141,43 +70,125 @@
 
     properties: {
 
-      _overlayCreated: Boolean
+      noCancelOnOutsideClick: {
+        type: Boolean,
+        value: false
+      },
+
+      smallScreen: {
+        type: Boolean,
+        reflectToAttribute: true,
+        value: false
+      },
+  
+      positionTarget: Object
 
     },
 
-    toggle() {
-      this._ensureOverlayCreated();
+    behaviors: [
+      OverlayBehavior
+    ],
 
-      requestAnimationFrame(_ => {
-        this._overlayElement.toggle();
-      });
+    listeners: {
+      'tap': '_onTap',
+      'overlay-opened': '_overlayOpened',
+      'overlay-closed': '_overlayClosed'
     },
 
-    _triggerTapped(event) {
+    _onTap(event) {
       event.preventDefault();
       event.stopPropagation();
 
-      this.toggle();
+      if (!this.noCancelOnOutsideClick && event.target.tagName === 'DROPDOWN-MENU') {
+        this.opened = false;           
+      }
     },
 
-    _ensureOverlayCreated() {
-      if (!this._overlayCreated) {
-        // Stamp template with the dropdown-content
-        const template = Polymer.dom(this).querySelector('template[is="dom-template"]');
-        const instance = template.stamp();
+    _overlayOpened() {
+      if (this.smallScreen || !this.positionTarget) {
+        this.style.background = 'rgba(0,0,0, 0.6)';
 
-        // Create overlay 
-        this._overlayElement = this.create('dropdown-menu-overlay', {
-          //horizontalAlign: 'auto',
-          verticalAlign: 'top',
-          positionTarget: this.$.dropdownTrigger,
-          withBackdrop: true
+        this._animation = this.animate([
+          {opacity: 0}, 
+          {opacity: 1}    
+        ], {
+          duration: 300,
+          easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
+        });
+      } else {
+        this._positionize();
+
+        this._animation = this.$.content.animate([
+          {transform: 'scale(0.3, 0) translate(20px, -10px)'},
+          {transform: 'scale(1, 1) translate(0, 0)'}     
+        ], {
+          duration: 240,
+          easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+        });
+      }
+
+      this._animation.onfinish = _ => {
+        this.fire('overlay-open-animation-finish');
+        this._animation = null;
+      };
+    },
+
+    _overlayClosed() {
+      this.style.display = '';
+
+      this._animation = this.animate([
+        {opacity: 1}, 
+        {opacity: 0}    
+      ], {
+        duration: 240,
+        easing: 'cubic-bezier(0.645, 0.045, 0.355, 1)'
+      });
+
+      this._animation.onfinish = _ => {
+        this.remove();
+
+        Object.assign(this.$.content.style, {
+          top: '',
+          bottom: '',
+          left: '',
+          right: ''
         });
 
-        Polymer.dom(this._overlayElement).appendChild(instance.root);
-        document.body.appendChild(this._overlayElement);
-        this._overlayCreated = true;
-      }
+        this.style.background = '';
+      };
+    },
+
+    /**
+     * We could use iron-fit-behavior, for now let just do this...
+     */
+    _positionize() {
+      const fitRect = this._getWindowRect();
+      const rect = this.$.content.getBoundingClientRect(); 
+      const positionRect = this.positionTarget.getBoundingClientRect();
+
+      // top-right
+      // top-left
+
+      // bottom-left
+      // bottom-right
+
+      let right = fitRect.width - positionRect.right;
+      let top = positionRect.top;
+
+      this.$.content.style.transformOrigin = 'top right';
+      this.$.content.style.right = right + 'px';
+      this.$.content.style.top = top + 'px';
+    },
+
+    _getWindowRect() {
+      return {
+        top: 0,
+        left: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        right: window.innerWidth,
+        bottom: window.innerHeight
+      };
     }
 
   });

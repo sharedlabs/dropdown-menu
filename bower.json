@@ -3,8 +3,9 @@
   "main": "dropdown-menu.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
-    "iron-overlay-behavior": "PolymerElements/iron-overlay-behavior#^1.10.1",
-    "paper-ripple": "PolymerElements/paper-ripple#^1.0.10"
+    "paper-ripple": "PolymerElements/paper-ripple#^1.0.10",
+    "iron-media-query": "PolymerElements/iron-media-query#^1.0.8",
+    "overlay-container": "git@github.com:sharedlabs/overlay-container.git"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
