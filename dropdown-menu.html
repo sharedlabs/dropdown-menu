@@ -76,6 +76,11 @@
         value: false
       },
 
+      noCancelOnButtonClick: {
+        type: Boolean,
+        value: false
+      },
+
       smallScreen: {
         type: Boolean,
         reflectToAttribute: true,
@@ -110,9 +115,14 @@
     _onTap(event) {
       event.preventDefault();
       event.stopPropagation();
+      const tagName = event.target.tagName;
 
-      if (!this.noCancelOnOutsideClick && event.target.tagName === 'DROPDOWN-MENU') {
+      if (!this.noCancelOnOutsideClick && tagName === 'DROPDOWN-MENU') {
         this.opened = false;           
+      }
+
+      if (!this.noCancelOnButtonClick && tagName === 'BUTTON' || tagName === 'A') {
+        this.opened = false;
       }
     },
 
