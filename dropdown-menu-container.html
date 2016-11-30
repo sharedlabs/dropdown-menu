@@ -58,8 +58,10 @@
         this.$.dropdown.positionTarget = this.$.dropdownTrigger;
         Polymer.dom(this.$.dropdown).appendChild(this._instance.root);
       }
-
-      this.opened = !this.opened;
+      
+      requestAnimationFrame(_ => {
+        this.opened = !this.opened;
+      });
     },
 
     _dropdownTriggerTapped(event) {
