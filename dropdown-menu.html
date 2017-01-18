@@ -1,7 +1,6 @@
-<link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../iron-media-query/iron-media-query.html">
-<link rel="import" href="../paper-ripple/paper-ripple.html">
-<link rel="import" href="../overlay-container/overlay-behavior.html">
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../overlay-container/overlay-mixin.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 
 <!--
   By default this element center the dropdown in the middle of the screen.
@@ -36,8 +35,8 @@
         will-change: initial;
       }
 
-      #content ::content button,
-      #content ::content a {
+      #content ::slotted(button),
+      #content ::slotted(a) {
         background: none;
         border: 0;
         color: initial;
@@ -55,200 +54,214 @@
     </style>
 
     <div id="content">
-      <content></content>
+      <slot></slot>
     </div>
 
-    <iron-media-query query="(max-width: 640px)" query-matches="{{smallScreen}}"></iron-media-query>
-
   </template>
-</dom-module>
 
-<script>
-(function() {
-  'use strict'
+  <script>
 
-  Polymer({
+    class DropdownMenu extends OverlayMixin(Polymer.Element) {
 
-    is: 'dropdown-menu',
+      static get is() {return 'dropdown-menu';}
 
-    properties: {
-
-      noCancelOnOutsideClick: {
-        type: Boolean,
-        value: false
-      },
-
-      noCancelOnButtonClick: {
-        type: Boolean,
-        value: false
-      },
-
-      smallScreen: {
-        type: Boolean,
-        reflectToAttribute: true,
-        value: false
-      },
-
-      /**
-       * The element that should be used to position the element. If not set, it will
-       * be centered on the screen.
-       * @type {!Element}
-       */
-      positionTarget: Object,
-
-      // The element to fit `this` into.
-      fitTarget: {
-        type: Object,
-        value: window
-      },
-      
-      _dropdownContainer: Object
-
-    },
-
-    behaviors: [
-      OverlayBehavior
-    ],
-
-    listeners: {
-      'tap': '_onTap',
-      'overlay-opened': '_overlayOpened',
-      'overlay-closed': '_overlayClosed'
-    },
-
-    _onTap(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      const tagName = event.target.tagName;
-
-      if (!this.noCancelOnOutsideClick && tagName === 'DROPDOWN-MENU') {
-        this.opened = false;           
-      }
-
-      if (!this.noCancelOnButtonClick && tagName === 'BUTTON' || tagName === 'A') {
-        this.opened = false;
-      }
-    },
-
-    _overlayOpened() {
-      if (this.smallScreen || !this.positionTarget) {
-        this.style.background = 'rgba(0,0,0, 0.52)';
-
-        this._animation = this.animate([
-          {opacity: 0}, 
-          {opacity: 1}    
-        ], {
-          duration: 300,
-          easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
-        });
-      } else {
-        this._positionize();
-
-        this._animation = this.$.content.animate([
-          {transform: 'scale(0.3, 0) translate(20px, -10px)'},
-          {transform: 'scale(1, 1) translate(0, 0)'}     
-        ], {
-          duration: 240,
-          easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-        });
-      }
-
-      this._animation.onfinish = _ => {
-        this.fire('overlay-open-animation-finish');
-        this.async(_ => this._ensureRipples());
-        this._animation = null;
-      };
-    },
-
-    _overlayClosed() {
-      this.style.display = '';
-
-      this._animation = this.animate([
-        {opacity: 1}, 
-        {opacity: 0}    
-      ], {
-        duration: 240,
-        easing: 'cubic-bezier(0.645, 0.045, 0.355, 1)'
-      });
-
-      this._animation.onfinish = _ => {
-        this.remove();
-
-        Object.assign(this.$.content.style, {
-          top: '',
-          bottom: '',
-          left: '',
-          right: '',
-          transformOrigin: ''
-        });
-
-        this.style.background = '';
-      };
-    },
-
-    /**
-     * Position the content div to the positionTarget.
-     * top/right align have priority.
-     */
-    _positionize() {
-      const rect = this.$.content.getBoundingClientRect();
-      const fitRect = this._getNormalizedRect(this.fitTarget);
-      const positionRect = this.positionTarget.getBoundingClientRect();
-
-      let top, bottom, right, left, transformOrigin;
-
-      if (fitRect.height - positionRect.bottom >= rect.height) {
-        top = positionRect.top + 'px';
-        transformOrigin = 'top';
-      } else {
-        bottom = 0 + 'px';
-        transformOrigin = 'bottom';
-      }
-
-      if (positionRect.right >= rect.width) {
-        right = fitRect.width - positionRect.right + 'px';
-        transformOrigin += ' right';
-      } else {
-        left = positionRect.left + 'px';
-        transformOrigin += ' left';
-      }
-
-      Object.assign(this.$.content.style,
-        {top, bottom, right, left, transformOrigin});
-    },
-
-    _getNormalizedRect(target) {
-      if (target === document.documentElement || target === window) {
+      static get config() {
         return {
-          top: 0,
-          left: 0,
-          width: window.innerWidth,
-          height: window.innerHeight,
-          right: window.innerWidth,
-          bottom: window.innerHeight
+          properties: {
+
+            noCancelOnOutsideClick: {
+              type: Boolean,
+              value: false
+            },
+
+            noCancelOnButtonClick: {
+              type: Boolean,
+              value: false
+            },
+
+            smallScreen: {
+              type: Boolean,
+              reflectToAttribute: true,
+              value: false
+            },
+
+            /**
+            * The element that should be used to position the element. If not set, it will
+            * be centered on the screen.
+            * @type {!Element}
+            */
+            positionTarget: Object,
+
+            // The element to fit `this` into.
+            fitTarget: {
+              type: Object,
+              value: window
+            },
+            
+            _dropdownContainer: Object
+
+          }
         };
       }
-      return target.getBoundingClientRect();
-    },
 
-    /**
-     * Lazy render the <paper-ripple> element into every button. 
-     */
-    _ensureRipples() {
-      Polymer.dom(this).children.forEach(el => {
-        if ((el.tagName === 'BUTTON' || el.tagName === 'A') && !el._hasRipple) {
-          const ripple = this.create('paper-ripple', {
-            opacityDecayVelocity: 0.8,
-            recenters: true
+      constructor() {
+        super();
+        this._mqListener = this._mqListener.bind(this);
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        requestAnimationFrame(_ => {
+          this.addEventListener('click', this._onClick.bind(this));
+          this._toggleMediaQueryListeners(true);
+          this.smallScreen = this._mq.matches;
+        });
+      }
+      
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        this._toggleMediaQueryListeners(false);
+      }
+
+      __openedChanged(opened, old) {
+        super.__openedChanged(opened, old);
+
+        if (opened) {
+          this._overlayOpened();
+        } else if (!old) {
+          this._overlayClosed();
+        }
+      }
+
+      _toggleMediaQueryListeners(enable) {
+        if (enable) {
+          this._mq = window.matchMedia('(max-width: 640px)');
+          this._mq.addListener(this._mqListener);
+        } else if (this._mq) {
+          this._mq.removeListener(this._mqListener);
+        }
+      }
+
+      _mqListener(event) {
+        this.smallScreen = event.matches;
+        console.log(this.smallScreen)
+      }
+
+      _onClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const localName = event.target.localName;
+
+        if (!this.noCancelOnOutsideClick &&
+            (localName === 'dropdown-menu' || localName === 'button' || localName === 'a')) {
+          this.opened = false;           
+        }
+      }
+
+      _overlayOpened() {
+        if (this.smallScreen || !this.positionTarget) {
+          this.style.background = 'rgba(0,0,0, 0.52)';
+
+          this._animation = this.animate([
+            {opacity: 0}, 
+            {opacity: 1}    
+          ], {
+            duration: 300,
+            easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)'
+          });
+        } else {
+          this._positionize();
+
+          this._animation = this.$.content.animate([
+            {transform: 'scale(0.3, 0) translate(20px, -10px)'},
+            {transform: 'scale(1, 1) translate(0, 0)'}     
+          ], {
+            duration: 240,
+            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+          });
+        }
+
+        this._animation.onfinish = _ => {
+          this.dispatchEvent(new CustomEvent('finish-open-dropdown-animation'));
+          this._animation = null;
+        };
+      }
+
+      _overlayClosed() {
+        this.style.display = '';
+
+        this._animation = this.animate([
+          {opacity: 1}, 
+          {opacity: 0}    
+        ], {
+          duration: 240,
+          easing: 'cubic-bezier(0.645, 0.045, 0.355, 1)'
+        });
+
+        this._animation.onfinish = _ => {
+          this.remove();
+
+          Object.assign(this.$.content.style, {
+            top: '',
+            bottom: '',
+            left: '',
+            right: '',
+            transformOrigin: ''
           });
 
-          Polymer.dom(el).appendChild(ripple);
-          el._hasRipple = true;
+          this.style.background = '';
+        };
+      }
+
+      /**
+      * Position the content div to the positionTarget.
+      * top/right align have priority.
+      */
+      _positionize() {
+        const rect = this.$.content.getBoundingClientRect();
+        const fitRect = this._getNormalizedRect(this.fitTarget);
+        const positionRect = this.positionTarget.getBoundingClientRect();
+
+        let top, bottom, right, left, transformOrigin;
+
+        if (fitRect.height - positionRect.bottom >= rect.height) {
+          top = positionRect.top + 'px';
+          transformOrigin = 'top';
+        } else {
+          bottom = 0 + 'px';
+          transformOrigin = 'bottom';
         }
-      });
+
+        if (positionRect.right >= rect.width) {
+          right = fitRect.width - positionRect.right + 'px';
+          transformOrigin += ' right';
+        } else {
+          left = positionRect.left + 'px';
+          transformOrigin += ' left';
+        }
+
+        Object.assign(this.$.content.style,
+          {top, bottom, right, left, transformOrigin});
+      }
+
+      _getNormalizedRect(target) {
+        if (target === document.documentElement || target === window) {
+          return {
+            top: 0,
+            left: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            right: window.innerWidth,
+            bottom: window.innerHeight
+          };
+        }
+        return target.getBoundingClientRect();
+      }
+
     }
 
-  });
+    customElements.define(DropdownMenu.is, DropdownMenu);
 
-}());
-</script>
+  </script>
+</dom-module>

@@ -8,21 +8,22 @@
 
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
 
-    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../dropdown-menu.html">
+    <link rel="import" href="../dropdown-menu-container.html">
 
-    <style is="custom-style" include="demo-pages-shared-styles">
+    <style>
     </style>
   </head>
   <body>
-    <div class="vertical-section-container centered">
-      <h3>Basic dropdown-menu demo</h3>
-      <demo-snippet>
-        <template>
-          <dropdown-menu></dropdown-menu>
-        </template>
-      </demo-snippet>
-    </div>
+
+    <dropdown-menu-container>
+      <button>Open</button>
+
+      <template>
+        <button>Menu 1</button>
+        <button>Menu 2</button>
+        <button>Menu 3</button>
+      </template>
+    </dropdown-menu-container>
+
   </body>
 </html>
