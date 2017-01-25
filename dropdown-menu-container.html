@@ -54,6 +54,19 @@
           throw new Error('dropdown-menu requeres a <template> child');
         }
 
+        template._forwardParentPath = (prop, value) => {
+          if (this._instance) {
+            this._instance.__setProperty(prop, value, true);
+          }
+        };
+
+        template._forwardParentProp = (path, value) => {
+          if (this._instance) {
+            this._instance._notifyPath(path, value, true);
+          }
+        };
+
+        template.ready();
         this._instance = template.stamp();
         this.$.dropdown.positionTarget = this.$.dropdownTrigger;
         this.$.dropdown._dropdownContainer = this;
