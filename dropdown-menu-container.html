@@ -17,11 +17,6 @@
       <content></content>
     </div>
 
-    <dropdown-menu
-        id="dropdown"
-        opened="{{opened}}"
-        no-cancel-on-outside-click="{{noCancelOnOutsideClick}}"></dropdown-menu>
-
   </template>
 </dom-module>
 
@@ -40,13 +35,39 @@
         value: false
       },
 
-      opened: Boolean,
+      opened: {
+        type: Boolean,
+        value: false,
+        observer: '_openedChanged'
+      },
+
+      _dropdownMenu: Object,
 
       _instance: Object
 
     },
 
-    toggle() {
+    _openedChanged(opened) {
+      if (opened) {
+        this._ensureInstance();
+
+        this._dropdownMenu = this.create('dropdown-menu', {
+          positionTarget: this,
+          noCancelOnOutsideClick: this.noCancelOnOutsideClick,
+          onDetach: _ => {
+            this.opened = false;
+            this._instance = null;
+            this._dropdownMenu = null;
+          },
+          _dropdownContainer: this
+        });
+
+        Polymer.dom(this._dropdownMenu).appendChild(this._instance.root);
+        this._dropdownMenu.opened = true;
+      }
+    },
+
+    _ensureInstance() {
       if (!this._instance) {
         const template = Polymer.dom(this).querySelector('template[is="dom-template"]');
 
@@ -68,20 +89,16 @@
 
         template.ready();
         this._instance = template.stamp();
-        this.$.dropdown.positionTarget = this.$.dropdownTrigger;
-        this.$.dropdown._dropdownContainer = this;
-        Polymer.dom(this.$.dropdown).appendChild(this._instance.root);
       }
-      
-      requestAnimationFrame(_ => {
-        this.opened = !this.opened;
-      });
     },
 
     _dropdownTriggerTapped(event) {
       event.preventDefault();
       event.stopPropagation();
-      this.toggle();
+
+      requestAnimationFrame(_ => {
+        this.opened = !this.opened;
+      });
     }
 
   });
