@@ -1,4 +1,5 @@
-<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/src/templatizer/templatizer.html">
 <link rel="import" href="dropdown-menu.html">
 
 <dom-module id="dropdown-menu-container">
@@ -13,95 +14,81 @@
       }
     </style>
 
-    <div id="dropdownTrigger" on-tap="_dropdownTriggerTapped">
-      <content></content>
+    <div id="dropdownTrigger" on-click="_dropdownTriggerClicked">
+      <slot></slot>
     </div>
 
+    <dropdown-menu
+        id="dropdown"
+        opened="{{opened}}"
+        no-cancel-on-outside-click="{{noCancelOnOutsideClick}}"></dropdown-menu>
+
   </template>
-</dom-module>
 
-<script>
-(function() {
-  'use strict'
+  <script>
+    const templatizer = new Polymer.Templatizer();
 
-  Polymer({
+    class DropdownMenuContainer extends Polymer.Element {
 
-    is: 'dropdown-menu-container',
+      static get is() {return 'dropdown-menu-container';}
 
-    properties: {
+      static get config() {
+        return {
+          properties: {
 
-      noCancelOnOutsideClick: {
-        type: Boolean,
-        value: false
-      },
+            noCancelOnOutsideClick: {
+              type: Boolean,
+              value: false
+            },
 
-      opened: {
-        type: Boolean,
-        value: false,
-        observer: '_openedChanged'
-      },
+            opened: Boolean,
 
-      _dropdownMenu: Object,
+            _instance: Object,
 
-      _instance: Object
+            _ctor: Object
 
-    },
-
-    _openedChanged(opened) {
-      if (opened) {
-        this._ensureInstance();
-
-        this._dropdownMenu = this.create('dropdown-menu', {
-          positionTarget: this,
-          noCancelOnOutsideClick: this.noCancelOnOutsideClick,
-          onDetach: _ => {
-            this.opened = false;
-            this._instance = null;
-            this._dropdownMenu = null;
-          },
-          _dropdownContainer: this
-        });
-
-        Polymer.dom(this._dropdownMenu).appendChild(this._instance.root);
-        this._dropdownMenu.opened = true;
+          }
+        };
       }
-    },
 
-    _ensureInstance() {
-      if (!this._instance) {
-        const template = Polymer.dom(this).querySelector('template[is="dom-template"]');
+      toggle() {
+        if (!this._instance) {
+          const template = this.querySelector('template');
+          template.__dmc = this;
 
-        if (!template) {
-          throw new Error('dropdown-menu requeres a <template> child');
+          if (!template) {
+            throw new Error('dropdown-menu-container requires a <template> child');
+          }
+
+          const ctor = templatizer.templatize(template, {
+            fwdHostPropToInstance: function(host, prop, value) {
+              const dmc = template.__dmc;
+              if (dmc._instance) {
+                dmc._instance.forwardProperty(prop, value, host);
+              }
+            }
+          });
+
+          this._instance = new ctor(this);
+          this.$.dropdown.positionTarget = this.$.dropdownTrigger;
+          this.$.dropdown._dropdownContainer = this;
+          this.$.dropdown.appendChild(this._instance.root);
         }
 
-        template._forwardParentPath = (prop, value) => {
-          if (this._instance) {
-            this._instance.__setProperty(prop, value, true);
-          }
-        };
-
-        template._forwardParentProp = (path, value) => {
-          if (this._instance) {
-            this._instance._notifyPath(path, value, true);
-          }
-        };
-
-        template.ready();
-        this._instance = template.stamp();
+        requestAnimationFrame(_ => {
+          this.opened = !this.opened;
+        });
       }
-    },
 
-    _dropdownTriggerTapped(event) {
-      event.preventDefault();
-      event.stopPropagation();
+      _dropdownTriggerClicked(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.toggle();
+      }
 
-      requestAnimationFrame(_ => {
-        this.opened = !this.opened;
-      });
     }
 
-  });
+    customElements.define(DropdownMenuContainer.is, DropdownMenuContainer);
 
-}());
-</script>
+  </script>
+</dom-module>
