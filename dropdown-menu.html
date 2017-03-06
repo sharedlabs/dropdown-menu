@@ -65,42 +65,40 @@
 
       static get is() {return 'dropdown-menu';}
 
-      static get config() {
+      static get properties() {
         return {
-          properties: {
 
-            noCancelOnOutsideClick: {
-              type: Boolean,
-              value: false
-            },
+          noCancelOnOutsideClick: {
+            type: Boolean,
+            value: false
+          },
 
-            noCancelOnButtonClick: {
-              type: Boolean,
-              value: false
-            },
+          noCancelOnButtonClick: {
+            type: Boolean,
+            value: false
+          },
 
-            smallScreen: {
-              type: Boolean,
-              reflectToAttribute: true,
-              value: false
-            },
+          smallScreen: {
+            type: Boolean,
+            reflectToAttribute: true,
+            value: false
+          },
 
-            /**
-            * The element that should be used to position the element. If not set, it will
-            * be centered on the screen.
-            * @type {!Element}
-            */
-            positionTarget: Object,
+          /**
+          * The element that should be used to position the element. If not set, it will
+          * be centered on the screen.
+          * @type {!Element}
+          */
+          positionTarget: Object,
 
-            // The element to fit `this` into.
-            fitTarget: {
-              type: Object,
-              value: window
-            },
-            
-            _dropdownContainer: Object
+          // The element to fit `this` into.
+          fitTarget: {
+            type: Object,
+            value: window
+          },
+          
+          _dropdownContainer: Object
 
-          }
         };
       }
 

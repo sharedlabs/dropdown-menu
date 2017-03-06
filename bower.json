@@ -6,7 +6,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "polymer": "Polymer/polymer#2.0-preview",
+    "polymer": "git@github.com:Polymer/polymer#v2.0.0-rc.1",
     "overlay-container": "git@github.com:sharedlabs/overlay-container.git#^1.0.0",
     "touch-item": "git@github.com:sharedlabs/touch-item.git#^0.1.0",
     "iron-flex-layout": "PolymerElements/iron-flex-layout#2.0-preview"
@@ -15,7 +15,6 @@
     "iron-component-page": "PolymerElements/iron-component-page#2.0-preview"
   },
   "resolutions": {
-    "polymer": "2.0-preview",
     "webcomponentsjs": "v1",
     "custom-elements": "master"
   }
