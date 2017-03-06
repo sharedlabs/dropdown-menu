@@ -1,5 +1,5 @@
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../polymer/src/templatizer/templatizer.html">
+<link rel="import" href="../polymer/src/utils/templatize.html">
 <link rel="import" href="dropdown-menu.html">
 
 <dom-module id="dropdown-menu-container">
@@ -26,7 +26,6 @@
   </template>
 
   <script>
-    const templatizer = new Polymer.Templatizer();
 
     class DropdownMenuContainer extends Polymer.Element {
 
@@ -58,7 +57,7 @@
             throw new Error('dropdown-menu-container requires a <template> child');
           }
 
-          const ctor = templatizer.templatize(template, {
+          const ctor = Polymer.Templatize.templatize(template, this, {
             fwdHostPropToInstance: function(host, prop, value) {
               const dmc = template.__dmc;
               if (dmc._instance) {
