@@ -58,10 +58,10 @@
           }
 
           const ctor = Polymer.Templatize.templatize(template, this, {
-            fwdHostPropToInstance: function(host, prop, value) {
+            forwardHostProp: function(prop, value) {
               const dmc = template.__dmc;
               if (dmc._instance) {
-                dmc._instance.forwardProperty(prop, value, host);
+                dmc._instance.forwardHostProp(prop, value);
               }
             }
           });
